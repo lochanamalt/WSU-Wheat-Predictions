@@ -2,8 +2,6 @@ import os
 import subprocess
 import sys
 from typing import Tuple
-from src.scripts import process_rgb_images, process_nir_images
-from model.panel.detect import process_images
 from src.scripts.radiometric_correction import apply_correction_to_all_images
 
 def setup_environment():
@@ -23,21 +21,26 @@ def setup_environment():
 def check_image_dimensions(data_folder: str) -> None:
     """Check if all images in cam folders are 640x928, and call split_cam_images.py if not."""
     cam_folders = [os.path.join(data_folder, f"cam{i}") for i in range(1, 9)]
-    resize_needed = False
+    split_needed = False
 
     for folder in cam_folders:
+        print(f"Checking {folder}...")
+        print("Exists:", os.path.exists(folder))
         if os.path.exists(folder):
+            print(f"Found {folder}")
+            split_needed = True
             for file in os.listdir(folder):
-                if file.endswith(('.png')):
+                if file.endswith('.png'):
                     dimensions = get_image_dimensions(os.path.join(folder, file))
+                    print(dimensions)
                     if dimensions != (640, 928):
-                        resize_needed = True
+                        split_needed = True
                         break
-            if resize_needed:
+            if split_needed:
                 break
 
-    if resize_needed:
-        print("Images need resizing. Calling split_cam_images.py...")
+    if split_needed:
+        print("Images need splitting. Calling split_cam_images.py...")
         subprocess.run([sys.executable, "src/scripts/split_cam_images.py"], check=True)
     else:
         print("All images are already 640x928.")
@@ -48,9 +51,8 @@ def get_image_dimensions(image_path: str) -> Tuple[int, int]:
     with Image.open(image_path) as img:
         return img.size
 
-def check_csv_files() -> None:
+def check_csv_files(csv_folder: str) -> None:
     """Check for the presence of CSV files and call detect.py if necessary."""
-    csv_folder = "data/csv/"
     required_csv_files = {f"cam{i}.csv" for i in range(1, 9)}
 
     existing_csv_files = {f for f in os.listdir(csv_folder) if f.endswith(".csv")}
@@ -58,16 +60,18 @@ def check_csv_files() -> None:
 
     if missing_csv_files:
         print("CSV files are missing. Running detect.py to calculate radiometric reflectance...")
-        subprocess.run([sys.executable, "../model/panel/detect.py"], check=True)
+        subprocess.run([sys.executable, "model/panel/detect.py"], check=True)
     else:
         print("All required CSV files are present. Proceeding with radiometric correction...")
         apply_correction_to_all_images(input_dir='data/images', output_dir='data/corrected_images')  # Update paths accordingly
 
 def main():
-    setup_environment()
-    data_folder = 'data/images'
-    check_image_dimensions(data_folder)
-    check_csv_files()
+    # setup_environment()
+    project_root = os.path.dirname(os.path.abspath(__file__))
+    # data_folder = os.path.join(project_root, "data/images")
+    # check_image_dimensions(data_folder)
+    csv_folder = os.path.join(project_root, "panel_detection_output")
+    check_csv_files(csv_folder)
 
 if __name__ == "__main__":
     main()
