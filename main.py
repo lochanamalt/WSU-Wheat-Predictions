@@ -45,33 +45,40 @@ def check_image_dimensions(data_folder: str) -> None:
     else:
         print("All images are already 640x928.")
 
-def get_image_dimensions(image_path: str) -> Tuple[int, int]:
+def get_image_dimensions( image_path: str) -> Tuple[int, int]:
     """Get the dimensions of an image."""
     from PIL import Image
     with Image.open(image_path) as img:
         return img.size
 
-def check_csv_files(csv_folder: str) -> None:
+def check_csv_files(project_root: str) -> None:
+    csv_folder = os.path.join(project_root, "panel_detection_output/csv_outputs")
+    data_folder = os.path.join(project_root, "data/images")
+    corrected_images_folder = os.path.join(project_root, "data/corrected_images")
+
     """Check for the presence of CSV files and call detect.py if necessary."""
     required_csv_files = {f"cam{i}.csv" for i in range(1, 9)}
 
     existing_csv_files = {f for f in os.listdir(csv_folder) if f.endswith(".csv")}
     missing_csv_files = required_csv_files - existing_csv_files
 
+    print(f"Missing CSV files: {missing_csv_files}")
+    print(f"Existing CSV files: {existing_csv_files}")
+
     if missing_csv_files:
         print("CSV files are missing. Running detect.py to calculate radiometric reflectance...")
         subprocess.run([sys.executable, "model/panel/detect.py"], check=True)
     else:
         print("All required CSV files are present. Proceeding with radiometric correction...")
-        apply_correction_to_all_images(input_dir='data/images', output_dir='data/corrected_images')  # Update paths accordingly
+        apply_correction_to_all_images(input_directory=data_folder, output_directory=corrected_images_folder,
+                                       csv_dir=csv_folder)  # Update paths accordingly
 
 def main():
     # setup_environment()
     project_root = os.path.dirname(os.path.abspath(__file__))
-    # data_folder = os.path.join(project_root, "data/images")
+    data_folder = os.path.join(project_root, "data/images")
     # check_image_dimensions(data_folder)
-    csv_folder = os.path.join(project_root, "panel_detection_output")
-    check_csv_files(csv_folder)
+    check_csv_files(project_root)
 
 if __name__ == "__main__":
     main()
