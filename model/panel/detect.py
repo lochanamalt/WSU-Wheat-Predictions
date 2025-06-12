@@ -30,13 +30,13 @@ def process_images(input_folder: str, output_folder: str, centers_list: List[Tup
             x1, y1, x2, y2 = map(int, result[:4])
             center_x, center_y = (x1 + x2) // 2, (y1 + y2) // 2
 
-            one_side_length = 20
+            one_side_length = 10
             x1_new = int(center_x - one_side_length / 2)
             y1_new = int(center_y - one_side_length / 2)
             x2_new = int(center_x + one_side_length / 2)
             y2_new = int(center_y + one_side_length / 2)
             cv2.rectangle(img, (x1_new, y1_new), (x2_new, y2_new), (0, 0, 255), 2)
-            centers_list.append((img_path.name, center_x, center_y, 20, 20))
+            centers_list.append((img_path.name, center_x, center_y, 10, 10))
 
         cv2.imwrite(str(output_path / img_path.name), img)
         print(f"Processed {img_path.name} with center at ({center_x}, {center_y})")
