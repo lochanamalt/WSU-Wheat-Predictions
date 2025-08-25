@@ -1,9 +1,11 @@
 import csv
 import os
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Any
 
 import cv2
 import numpy as np
+
+from numpy import ndarray, dtype
 from numpy.random.mtrand import Sequence
 
 # Calibration data for 8 cameras
@@ -31,7 +33,7 @@ calibration_data_rgb: Dict[str, Dict[str, float]] = {
 
 def radiometric_correction(img: np.ndarray,
                            lut_values: Dict[str, float],
-                           ref_panel_bgr: Sequence[float]) -> np.ndarray:
+                           ref_panel_bgr: Sequence[float]) -> tuple[ndarray | Any, ndarray | Any]:
     """
     Applies radiometric correction to an image based on camera calibration data.
 
@@ -50,54 +52,70 @@ def radiometric_correction(img: np.ndarray,
     green_band_correction_factor = (lut_values['Green'] * 0.01 * 255) / ref_panel_bgr[1]
     red_band_correction_factor = (lut_values['Red'] * 0.01 * 255) / ref_panel_bgr[2]
 
-    img_corrected_B = blue_band_correction_factor * img_original_B
-    img_corrected_G = green_band_correction_factor * img_original_G
-    img_corrected_R = red_band_correction_factor * img_original_R
+    img_corrected_B_DN = blue_band_correction_factor * img_original_B
+    img_corrected_G_DN = green_band_correction_factor * img_original_G
+    img_corrected_R_DN = red_band_correction_factor * img_original_R
+
+    img_corrected_B_RF = img_corrected_B_DN / 255
+    img_corrected_G_RF = img_corrected_G_DN / 255
+    img_corrected_R_RF = img_corrected_R_DN / 255
 
     # Clip values to ensure they are within the correct range
-    return cv2.merge([img_corrected_B, img_corrected_G, img_corrected_R])
+    return (cv2.merge([img_corrected_B_DN, img_corrected_G_DN, img_corrected_R_DN]),
+            cv2.merge([img_corrected_B_RF, img_corrected_G_RF, img_corrected_R_RF]))
 
 
 
-def apply_correction_to_all_images(input_directory: str, output_directory: str, csv_dir: str) -> None:
+def apply_correction_to_all_images(input_directory: str, output_directory_digital_number: str,
+                                   output_directory_reflectance_value: str, csv_dir: str) -> None:
     """
     Applies radiometric correction to all images in the input directory
     and saves the corrected images to the output directory.
 
     Args:
         input_directory (str): Path to the directory containing input images.
-        output_directory (str): Path to the directory where corrected images will be saved.
+        output_directory_digital_number (str): Path to the directory where corrected images with digital number will be saved.
+        output_directory_reflectance_value (str): Path to the directory where corrected images with reflectance value will be saved.
+        csv_dir (str): Path to the directory where csv file with reflectance panel coordinates is located.
 
     Returns:
         None
     """
-    if not os.path.exists(output_directory):
-        os.makedirs(output_directory)
+    if not os.path.exists(output_directory_digital_number):
+        os.makedirs(output_directory_digital_number)
 
     for cam_name in calibration_data_nir.keys():
         cam_nir_input_dir = os.path.join(input_directory, f'{cam_name}_nir')
         cam_rgb_input_dir = os.path.join(input_directory, f'{cam_name}_rgb')
-        cam_nir_output_dir = os.path.join(output_directory, f'{cam_name}_nir')
-        cam_rgb_output_dir = os.path.join(output_directory, f'{cam_name}_rgb')
+        cam_nir_dn_output_dir = os.path.join(output_directory_digital_number, f'{cam_name}_nir')
+        cam_rgb_dn_output_dir = os.path.join(output_directory_digital_number, f'{cam_name}_rgb')
+        cam_nir_rf_output_dir = os.path.join(output_directory_reflectance_value, f'{cam_name}_nir')
+        cam_rgb_rf_output_dir = os.path.join(output_directory_reflectance_value, f'{cam_name}_rgb')
+
         cam_nir_csv = f"{csv_dir}\\{cam_name}_nir.csv"
         cam_rgb_csv = f"{csv_dir}\\{cam_name}_rgb.csv"
 
-        if not os.path.exists(cam_nir_output_dir):
-            os.makedirs(cam_nir_output_dir)
-        if not os.path.exists(cam_rgb_output_dir):
-            os.makedirs(cam_rgb_output_dir)
+        if not os.path.exists(cam_nir_dn_output_dir):
+            os.makedirs(cam_nir_dn_output_dir)
+        if not os.path.exists(cam_rgb_dn_output_dir):
+            os.makedirs(cam_rgb_dn_output_dir)
+        if not os.path.exists(cam_nir_rf_output_dir):
+            os.makedirs(cam_nir_rf_output_dir)
+        if not os.path.exists(cam_rgb_rf_output_dir):
+            os.makedirs(cam_rgb_rf_output_dir)
 
         lut_values_nir = calibration_data_nir[cam_name]
         lut_values_rgb = calibration_data_rgb[cam_name]
 
         # process nir csv
-        image_correction_per_camera_csv_file(cam_nir_csv, cam_nir_input_dir, cam_nir_output_dir, lut_values_nir)
-
+        image_correction_per_camera_csv_file(cam_nir_csv, cam_nir_input_dir,
+                                             cam_nir_dn_output_dir,cam_nir_rf_output_dir, lut_values_nir)
         # process rgb csv
-        image_correction_per_camera_csv_file(cam_rgb_csv, cam_rgb_input_dir, cam_rgb_output_dir, lut_values_rgb)
+        image_correction_per_camera_csv_file(cam_rgb_csv, cam_rgb_input_dir,
+                                             cam_rgb_dn_output_dir, cam_rgb_rf_output_dir, lut_values_rgb)
 
 
-def image_correction_per_camera_csv_file(cam_csv, cam_input_dir, cam_output_dir, lut_values):
+def image_correction_per_camera_csv_file(cam_csv, cam_input_dir, cam_output_dir_dn, cam_output_dir_rf, lut_values):
     with open(cam_csv, 'r', newline='') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
@@ -110,12 +128,16 @@ def image_correction_per_camera_csv_file(cam_csv, cam_input_dir, cam_output_dir,
 
 
             # Apply radiometric correction
-            img_corrected = radiometric_correction(image, lut_values, mean_bgr)
+            img_corrected_DN, img_corrected_RF = radiometric_correction(image, lut_values, mean_bgr)
 
             # Save the corrected image
-            output_path = os.path.join(cam_output_dir, filename)
-            cv2.imwrite(output_path, img_corrected)
-            print(f"Saved corrected image: {output_path}")
+            output_path_dn = os.path.join(cam_output_dir_dn, filename + '.tif')
+            output_path_rf = os.path.join(cam_output_dir_rf, filename + '.tif')
+            cv2.imwrite(output_path_dn, img_corrected_DN)
+            cv2.imwrite(output_path_rf, img_corrected_RF)
+
+            print(f"Saved corrected image with digital numbers: {output_path_dn}")
+            print(f"Saved corrected image with reflectance values: {output_path_rf}")
 
 
 def compute_reference_panel_mean_digital_numbers(image, row):
@@ -136,8 +158,9 @@ if __name__ == "__main__":
     project_root = os.path.dirname(os.path.abspath(__file__))
 
     input_dir = os.path.join(project_root, '..\..\data\images')
-    output_dir = os.path.join(project_root, '..\..\data\corrected_images')
-    csv_folder = os.path.join(project_root, '..\..\panel_detection_output\csv_outputs')
+    output_dir_dn = os.path.join(project_root, '..\..\data\\2024_outputs\corrected_images_digital_number')
+    output_dir_rf = os.path.join(project_root, '..\..\data\\2024_outputs\corrected_images_reflectance_value')
+    csv_folder = os.path.join(project_root, '..\..\data\\2024_outputs\panel_detection_output\csv_outputs')
 
     # Apply radiometric corrections to all images in the dataset
-    apply_correction_to_all_images(input_dir, output_dir, csv_folder)
+    apply_correction_to_all_images(input_dir, output_dir_dn, output_dir_rf, csv_folder)

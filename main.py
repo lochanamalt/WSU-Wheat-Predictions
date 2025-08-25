@@ -19,7 +19,7 @@ def setup_environment():
     print("Environment setup successfully")
 
 def check_image_dimensions(data_folder: str) -> None:
-    """Check if all images in cam folders are 640x928, and call split_cam_images.py if not."""
+    """Check if all 2024_images in cam folders are 640x928, and call split_cam_images.py if not."""
     cam_folders = [os.path.join(data_folder, f"cam{i}") for i in range(1, 9)]
     split_needed = False
 
@@ -52,9 +52,10 @@ def get_image_dimensions( image_path: str) -> Tuple[int, int]:
         return img.size
 
 def check_csv_files(project_root: str) -> None:
-    csv_folder = os.path.join(project_root, "panel_detection_output/csv_outputs")
-    data_folder = os.path.join(project_root, "data/images")
-    corrected_images_folder = os.path.join(project_root, "data/corrected_images")
+    csv_folder = os.path.join(project_root, "data/2024_outputs/panel_detection_output/csv_outputs")
+    data_folder = os.path.join(project_root, "data/2024_images")
+    corrected_images_folder = os.path.join(project_root, "data/2024_outputs/corrected_images_digital_number")
+    output_directory_rf = os.path.join(project_root, "data/2024_outputs/corrected_images_reflectance_value")
 
     """Check for the presence of CSV files and call detect.py if necessary."""
     required_csv_files = {f"cam{i}.csv" for i in range(1, 9)}
@@ -70,13 +71,12 @@ def check_csv_files(project_root: str) -> None:
         subprocess.run([sys.executable, "model/panel/detect.py"], check=True)
     else:
         print("All required CSV files are present. Proceeding with radiometric correction...")
-        apply_correction_to_all_images(input_directory=data_folder, output_directory=corrected_images_folder,
-                                       csv_dir=csv_folder)  # Update paths accordingly
+        apply_correction_to_all_images(data_folder, corrected_images_folder, output_directory_rf, csv_folder)
 
 def main():
     # setup_environment()
     project_root = os.path.dirname(os.path.abspath(__file__))
-    data_folder = os.path.join(project_root, "data/images")
+    data_folder = os.path.join(project_root, "data/2024_images")
     # check_image_dimensions(data_folder)
     check_csv_files(project_root)
 

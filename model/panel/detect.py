@@ -10,11 +10,11 @@ model: YOLO = YOLO('model/panel/best.pt')
 
 
 def process_images(input_folder: str, output_folder: str, centers_list: List[Tuple[str, int, int, int, int]]) -> None:
-    """Process images from the input folder and save the processed images to the output folder.
+    """Process 2024_images from the input folder and save the processed 2024_images to the output folder.
     
     Args:
-        input_folder (str): The path to the input folder containing images.
-        output_folder (str): The path to the output folder where processed images will be saved.
+        input_folder (str): The path to the input folder containing 2024_images.
+        output_folder (str): The path to the output folder where processed 2024_images will be saved.
         centers_list (List[Tuple[str, int, int, int, int]]): A list to store the filename and center coordinates of detected objects.
     """
     input_path: Path = Path(input_folder)
@@ -92,15 +92,15 @@ for i in range(1, 9):
     project_root = os.path.dirname(os.path.abspath(__file__))
 
     centers_list: List[Tuple[str, int, int, int, int]] = []  # Reset centers_list for each new camera folder
-    process_images(os.path.join(project_root, f'../../data/images/cam{i}'),
-                   os.path.join(project_root, f'../../panel_detection_output/cam{i}'), centers_list)
+    process_images(os.path.join(project_root, f'../../data/2024_images/cam{i}'),
+                   os.path.join(project_root, f'../../data/2024_outputs/panel_detection_output/cam{i}'), centers_list)
 
-    combined_csv: str = os.path.join(project_root, f'../../panel_detection_output/csv_outputs/cam{i}.csv')
+    combined_csv: str = os.path.join(project_root, f'../../data/2024_outputs/panel_detection_output/csv_outputs/cam{i}.csv')
 
     save_to_csv(centers_list, combined_csv)
 
-    nir_csv: str = os.path.join(project_root, f'../../panel_detection_output/csv_outputs/cam{i}_nir.csv')
-    rgb_csv: str = os.path.join(project_root, f'../../panel_detection_output/csv_outputs/cam{i}_rgb.csv')
+    nir_csv: str = os.path.join(project_root, f'../../data/2024_outputs/panel_detection_output/csv_outputs/cam{i}_nir.csv')
+    rgb_csv: str = os.path.join(project_root, f'../../data/2024_outputs/panel_detection_output/csv_outputs/cam{i}_rgb.csv')
     split_csv(combined_csv, nir_csv, rgb_csv)
 
 print("Processing complete.")
