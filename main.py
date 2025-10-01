@@ -54,18 +54,14 @@ def get_image_dimensions( image_path: str) -> Tuple[int, int]:
 def check_csv_files(project_root: str) -> None:
     csv_folder = os.path.join(project_root, "data/2024_outputs/panel_detection_output/csv_outputs")
     data_folder = os.path.join(project_root, "data/2024_images")
-    corrected_images_folder = os.path.join(project_root, "data/2024_outputs/corrected_images_digital_number")
-    output_directory_rf = os.path.join(project_root, "data/2024_outputs/corrected_images_reflectance_value")
+    corrected_images_folder = os.path.join(project_root, "data/2024_outputs/corrected_images_digital_number_new")
+    output_directory_rf = os.path.join(project_root, "data/2024_outputs/corrected_images_reflectance_value_new")
 
     """Check for the presence of CSV files and call detect.py if necessary."""
-    required_csv_files = {f"cam{i}.csv" for i in range(1, 9)}
+    required_csv_files = {f"cam{i}{suffix}" for i in range(1, 9) for suffix in (".csv", "_rgb.csv", "_nir.csv")}
 
     existing_csv_files = {f for f in os.listdir(csv_folder) if f.endswith(".csv")}
     missing_csv_files = required_csv_files - existing_csv_files
-
-    print(f"Missing CSV files: {missing_csv_files}")
-    print(f"Existing CSV files: {existing_csv_files}")
-
     if missing_csv_files:
         print("CSV files are missing. Running detect.py to calculate radiometric reflectance...")
         subprocess.run([sys.executable, "model/panel/detect.py"], check=True)
