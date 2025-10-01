@@ -26,7 +26,7 @@ def rename_files(folder_path: str) -> None:
         # Check if the filename starts with 'date_'
         if filename.startswith('date_'):
             # Construct the new file name
-            new_filename = f'cam1 ({i}).png'  # Change this to cam2, cam3, cam4, etc. as needed
+            new_filename = f'pi8_{filename}'  # Change this to pi1, pi2, etc. as needed
             
             # Get the full file path
             old_file = os.path.join(folder_path, filename)
