@@ -1,6 +1,5 @@
 import os
 from PIL import Image
-from typing import Union
 
 def process_rgb_images(input_folder: str, output_folder_rgb: str) -> None:
     """
@@ -20,11 +19,7 @@ def process_rgb_images(input_folder: str, output_folder_rgb: str) -> None:
         cam_path = os.path.join(input_folder, cam)
         output_cam_rgb_path = os.path.join(output_folder_rgb, f'{cam}_rgb')
 
-        print(f'Processing path: {cam_path}')
-        
         os.makedirs(output_cam_rgb_path, exist_ok=True)
-
-
         # List all image files in the current camera folder
         for filename in os.listdir(cam_path):
             if filename.endswith('.png'):
