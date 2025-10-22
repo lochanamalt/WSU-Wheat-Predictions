@@ -65,9 +65,10 @@ def check_csv_files(project_root: str) -> None:
     if missing_csv_files:
         print("CSV files are missing. Running detect.py to calculate radiometric reflectance...")
         subprocess.run([sys.executable, "model/panel/detect.py"], check=True)
-    else:
-        print("All required CSV files are present. Proceeding with radiometric correction...")
-        apply_correction_to_all_images(data_folder, corrected_images_folder, output_directory_rf, csv_folder)
+    # else:
+        # print("All required CSV files are present. Proceeding with radiometric correction...")
+        # Need to run the align_nir_rgb.py first
+        # apply_correction_to_all_images(data_folder, corrected_images_folder, output_directory_rf, csv_folder)
 
 def main():
     # setup_environment()
