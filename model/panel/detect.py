@@ -5,6 +5,8 @@ import csv
 from typing import List, Tuple
 import os
 
+from paths import RAW_IMG_DIR
+
 # Load the YOLOv8 model
 model: YOLO = YOLO('model/panel/best.pt')
 
@@ -92,7 +94,7 @@ for i in range(1, 9):
     project_root = os.path.dirname(os.path.abspath(__file__))
 
     centers_list: List[Tuple[str, int, int, int, int]] = []  # Reset centers_list for each new camera folder
-    process_images(os.path.join(project_root, f'../../data/2024_images/cam{i}'),
+    process_images(os.path.join(RAW_IMG_DIR, f'\\cam{i}'),
                    os.path.join(project_root, f'../../data/2024_outputs/panel_detection_output/cam{i}'), centers_list)
 
     combined_csv: str = os.path.join(project_root, f'../../data/2024_outputs/panel_detection_output/csv_outputs/cam{i}.csv')

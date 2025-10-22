@@ -2,6 +2,8 @@ import os
 import subprocess
 import sys
 from typing import Tuple
+
+from paths import RAW_IMG_DIR
 from src.scripts.radiometric_correction import apply_correction_to_all_images
 
 def setup_environment():
@@ -53,9 +55,6 @@ def get_image_dimensions( image_path: str) -> Tuple[int, int]:
 
 def check_csv_files(project_root: str) -> None:
     csv_folder = os.path.join(project_root, "data/2024_outputs/panel_detection_output/csv_outputs")
-    data_folder = os.path.join(project_root, "data/2024_images")
-    corrected_images_folder = os.path.join(project_root, "data/2024_outputs/corrected_images_digital_number_new")
-    output_directory_rf = os.path.join(project_root, "data/2024_outputs/corrected_images_reflectance_value_new")
 
     """Check for the presence of CSV files and call detect.py if necessary."""
     required_csv_files = {f"cam{i}{suffix}" for i in range(1, 9) for suffix in (".csv", "_rgb.csv", "_nir.csv")}
@@ -73,7 +72,7 @@ def check_csv_files(project_root: str) -> None:
 def main():
     # setup_environment()
     project_root = os.path.dirname(os.path.abspath(__file__))
-    data_folder = os.path.join(project_root, "data/2024_images")
+    data_folder = RAW_IMG_DIR
     # check_image_dimensions(data_folder)
     check_csv_files(project_root)
 

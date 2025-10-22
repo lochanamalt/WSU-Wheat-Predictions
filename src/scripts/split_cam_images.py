@@ -1,6 +1,9 @@
 import os
 from PIL import Image
 
+from paths import RAW_IMG_DIR
+
+
 def process_rgb_images(input_folder: str, output_folder_rgb: str) -> None:
     """
     Processes RGB images from camera folders, extracting and saving the right half of each image.
@@ -84,7 +87,7 @@ def process_nir_images(input_folder: str, output_folder_ir: str) -> None:
 
 if __name__ == "__main__":
     project_root = os.path.dirname(os.path.abspath(__file__))
-    data_folder = os.path.join(project_root, "../../data/2024_images")
+    data_folder = RAW_IMG_DIR
 
     input_folder, output_folder_rgb, output_folder_ir = data_folder, data_folder, data_folder
 
