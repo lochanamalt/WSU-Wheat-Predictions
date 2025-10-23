@@ -13,4 +13,4 @@ CORRECTED_DN_IMG_DIR = "C:\\Users\\lochana.marasingha\\Documents\\Wheat Project\
 
 ALIGNED_RGB_DIR = "C:\\Users\\lochana.marasingha\\Documents\\Wheat Project\\2024_field_season_wheat\\for_img_processing\\aligned_rgb"
 
-PANEL_DETECT_CSV_OUTPUT = os.path.join(PROJECT_ROOT, 'data\\2024_outputs\\panel_detection_output\\csv_outputs_new')
+PANEL_DETECT_CSV_OUTPUT = os.path.join(PROJECT_ROOT, 'data\\panel_detection_output\\csv_outputs_new')
