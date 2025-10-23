@@ -1,6 +1,8 @@
 import os
 from PIL import Image
-from typing import Union
+
+from paths import RAW_IMG_DIR
+
 
 def process_rgb_images(input_folder: str, output_folder_rgb: str) -> None:
     """
@@ -19,9 +21,8 @@ def process_rgb_images(input_folder: str, output_folder_rgb: str) -> None:
     for cam in cam_folders:
         cam_path = os.path.join(input_folder, cam)
         output_cam_rgb_path = os.path.join(output_folder_rgb, f'{cam}_rgb')
-        
+
         os.makedirs(output_cam_rgb_path, exist_ok=True)
-        
         # List all image files in the current camera folder
         for filename in os.listdir(cam_path):
             if filename.endswith('.png'):
@@ -84,8 +85,11 @@ def process_nir_images(input_folder: str, output_folder_ir: str) -> None:
                 
                 print(f"Processed left side of {filename}")
 
-if __name__ == "__main__":    
-    input_folder, output_folder_rgb, output_folder_ir = '../data', '../data/', '../data/'
+if __name__ == "__main__":
+    project_root = os.path.dirname(os.path.abspath(__file__))
+    data_folder = RAW_IMG_DIR
+
+    input_folder, output_folder_rgb, output_folder_ir = data_folder, data_folder, data_folder
 
     # Run the desired function
     process_rgb_images(input_folder, output_folder_rgb)

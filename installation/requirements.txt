@@ -1,7 +1,9 @@
 opencv-python-headless
-pandas
-numpy
-matplotlib
-Pillow
-ultralytics
+pandas~=2.2.3
+numpy~=2.1.1
+matplotlib~=3.10.1
+Pillow~=10.4.0
+ultralytics~=8.3.101
 subprocess32
+torch~=2.6.0
+opencv-python~=4.11.0.86

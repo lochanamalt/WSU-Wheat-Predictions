@@ -39,5 +39,5 @@ def reorder_csv_files(input_dir: str) -> None:
         print(f"Processed {csv_file}")
 
 if __name__ == "__main__":
-    input_dir = '../model_output/'  # Change this to the correct directory path
+    input_dir = '../../data/2024_outputs/panel_detection_output/csv_outputs'  # Change this to the correct directory path
     reorder_csv_files(input_dir)
