@@ -81,7 +81,7 @@ def orb_ransac_alignment(source_img_grey, output_img_grey, img_to_align):
     if H is None:
         return None, None
 
-    height, width = source_img.shape
+    width, height = source_img.shape
     aligned_img = cv2.warpPerspective(img_to_align, H, (height, width), flags=cv2.INTER_NEAREST + cv2.WARP_INVERSE_MAP)
     return aligned_img, H
 
@@ -95,7 +95,7 @@ def ecc_alignment(noir_grey, rgb_grey, rgb_img):
     criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 6000, 1e-7)
     (cc, warp_matrix) = cv2.findTransformECC(noir_grey, rgb_grey, warp_matrix, warp_mode, criteria)
     # Apply transformation
-    height, width = rgb_img.shape
+    width, height  = noir_grey.shape
     aligned_img = cv2.warpAffine(rgb_img, warp_matrix, (height, width),
                              flags=cv2.INTER_NEAREST + cv2.WARP_INVERSE_MAP)
 
