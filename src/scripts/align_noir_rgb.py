@@ -83,7 +83,22 @@ def orb_ransac_alignment(source_img_grey, output_img_grey, img_to_align):
 
     height, width = source_img.shape
     aligned_img = cv2.warpPerspective(img_to_align, H, ( width, height), flags=cv2.INTER_NEAREST + cv2.WARP_INVERSE_MAP)
-    return aligned_img, H
+
+    # Compute reprojection error
+    src_pts_hom = cv2.convertPointsToHomogeneous(src_pts).reshape(-1, 3).T
+    proj_pts_hom = H @ src_pts_hom
+    proj_pts_hom /= proj_pts_hom[2, :]
+
+    proj_pts = proj_pts_hom[:2, :].T
+
+    dst_pts_2d = dst_pts.reshape(-1, 2)
+    errors = np.linalg.norm(dst_pts_2d - proj_pts, axis=1)
+
+    mean_error = np.mean(errors)
+    median_error = np.median(errors)
+    max_error = np.max(errors)
+    min_error = np.min(errors)
+    return aligned_img, H, {'mean_error': mean_error, 'median_error': median_error, 'max_error': max_error, 'min_error': min_error}
 
 
 def ecc_alignment(noir_grey, rgb_grey, rgb_img):
@@ -110,14 +125,16 @@ def align_rgb_to_noir(rgb_img, noir_img, align_method: AlignMethod):
     noir_grey = to_gray_float(noir_img)
     rgb_grey = to_gray_float(rgb_img)
 
+    reproj_errors = None
+
     if align_method == AlignMethod.ECC:
         aligned_im, warp = ecc_alignment(noir_grey, rgb_grey, rgb_img)
     elif align_method == AlignMethod.ORB_RANSAC:
-        aligned_im, warp = orb_ransac_alignment(noir_grey, rgb_grey, rgb_img)
+        aligned_im, warp, reproj_errors = orb_ransac_alignment(noir_grey, rgb_grey, rgb_img)
     else:
         raise ValueError("Invalid align method")
 
-    return aligned_im, warp
+    return aligned_im, warp, reproj_errors
 
 
 if __name__ == "__main__":
@@ -126,6 +143,11 @@ if __name__ == "__main__":
                            'date_6-7-2024_13.0.10_1.png']
     # Collect the failing images, try the failed images again using the other alignment method
     failing_images = []
+
+    all_mean_errors = []
+    all_median_errors = []
+    all_max_errors = []
+    all_min_errors = []
 
     # Alternate the alignement method here
     alignment_method = AlignMethod.ORB_RANSAC
@@ -156,12 +178,31 @@ if __name__ == "__main__":
                 img_rgb_color = cv2.imread(input_rgb_file_path, cv2.IMREAD_UNCHANGED)
 
                 try:
-                    aligned, warp = align_rgb_to_noir(img_rgb_color, img_noir_color, alignment_method)
+                    aligned, warp, reproj_errors  = align_rgb_to_noir(img_rgb_color, img_noir_color, alignment_method)
                     cv2.imwrite(output_file_path, aligned)
+
+                    if reproj_errors:
+                        all_mean_errors.append(reproj_errors['mean_error'])
+                        all_median_errors.append(reproj_errors['median_error'])
+                        all_max_errors.append(reproj_errors['max_error'])
+                        all_min_errors.append(reproj_errors['min_error'])
 
                 except cv2.error as e:
                     print("Failed to apply warp for image:", filename)
                     print("ECC alignment failed:", e)
                     failing_images.append(f"{cam_no}_{filename}")
+
+    print("Mean of mean errors:", np.mean(all_mean_errors))
+    print("Median of mean errors:", np.median(all_mean_errors))
+    print("Std of mean errors:", np.std(all_mean_errors))
+    print("Max of max errors:", np.max(all_max_errors))
+    print("Min of min errors:", np.max(all_min_errors))
+
+    # Mean of mean errors: 20.91938822698406
+    # Median of mean errors: 14.022722318184657
+    # Std of mean errors: 25.943595154696826
+    # Max of max errors: 2883.5286065514365
+    # Min of min errors: 0.4785633181425849
+
 
     print(failing_images)
