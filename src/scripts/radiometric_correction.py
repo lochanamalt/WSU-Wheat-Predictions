@@ -87,7 +87,6 @@ def radiometric_correction(img: np.ndarray,
     img_corrected_G_RF = img_corrected_G_DN / 255
     img_corrected_R_RF = img_corrected_R_DN / 255
 
-    # Clip values to ensure they are within the correct range
     return (cv2.merge([img_corrected_B_DN, img_corrected_G_DN, img_corrected_R_DN]),
             cv2.merge([img_corrected_B_RF, img_corrected_G_RF, img_corrected_R_RF]))
 
@@ -156,7 +155,6 @@ def image_correction_per_camera_csv_file(cam_csv, cam_input_dir, cam_output_dir_
 
             # Compute ROI boundaries
             mean_bgr = compute_reference_panel_mean_digital_numbers(image, row)
-
             panel_reflectances.append((filename, mean_bgr[0],mean_bgr[1], mean_bgr[2]))
 
             # Apply radiometric correction
@@ -376,7 +374,7 @@ if __name__ == "__main__":
     # Apply radiometric corrections to all raw images
     # To correct the aligned rgb images, we need to identify the panel reflectance of the rgb images that are not aligned
     # This function corrects and saves the panel reflectance of both noir and rgb images,
-    #apply_correction_to_all_images(input_dir, output_dir_dn, output_dir_rf, csv_folder)
+    apply_correction_to_all_images(input_dir, output_dir_dn, output_dir_rf, csv_folder)
 
     # There are some images that does not have reflectance panels.
     # The function below is to correct those images based on another camera's panel reflectance values captured on the same day, same time.
