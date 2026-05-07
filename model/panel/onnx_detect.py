@@ -9,10 +9,6 @@ import onnxruntime as ort
 
 from paths import RAW_IMG_DIR, PANEL_DETECT_IMG_OUTPUT, YEAR, PANEL_DETECT_CSV_OUTPUT
 
-# Load the YOLOv12s model
-# model: YOLO = YOLO('yolo12s_custom_panel_detection.onnx')
-
-
 # ONNX
 MODEL_PATH = "yolo12s_custom_panel_detection_combined_int8.onnx"
 session = ort.InferenceSession(
@@ -157,22 +153,6 @@ def process_images(input_folder: str, output_folder: str, centers_list: List[Tup
         img = draw_boxes(img, boxes, centers_list, img_path.name)
 
         cv2.imwrite(str(output_path / img_path.name), img)
-
-        # results = model(img)
-        #
-        # for result in results[0].boxes.data.cpu().numpy():
-        #     x1, y1, x2, y2 = map(int, result[:4])
-        #     center_x, center_y = (x1 + x2) // 2, (y1 + y2) // 2
-        #
-        #     one_side_length = 10
-        #     x1_new = int(center_x - one_side_length / 2)
-        #     y1_new = int(center_y - one_side_length / 2)
-        #     x2_new = int(center_x + one_side_length / 2)
-        #     y2_new = int(center_y + one_side_length / 2)
-        #     cv2.rectangle(img, (x1_new, y1_new), (x2_new, y2_new), (0, 0, 255), 2)
-        #     centers_list.append((img_path.name, center_x, center_y, 10, 10))
-        #
-        # cv2.imwrite(str(output_path / img_path.name), img)
         print(f"Processed {img_path.name}")
 
 def save_to_csv(centers_list: List[Tuple[str, int, int, int, int]], output_csv: str) -> None:
@@ -232,12 +212,12 @@ for i in range(1, 2):
     process_images(os.path.join(RAW_IMG_DIR, f'{pi_prefix}{i}'),
                    os.path.join(PANEL_DETECT_IMG_OUTPUT, f'cam{i}'), centers_list)
 
-    # combined_csv: str = os.path.join(PANEL_DETECT_CSV_OUTPUT, f'cam{i}.csv')
-    # #
-    # save_to_csv(centers_list, combined_csv)
-    # #
-    # nir_csv: str = os.path.join(PANEL_DETECT_CSV_OUTPUT, f'cam{i}_nir.csv')
-    # rgb_csv: str = os.path.join(PANEL_DETECT_CSV_OUTPUT, f'cam{i}_rgb.csv')
-    # split_csv(combined_csv, nir_csv, rgb_csv)
+    combined_csv: str = os.path.join(PANEL_DETECT_CSV_OUTPUT, f'cam{i}.csv')
+    #
+    save_to_csv(centers_list, combined_csv)
+    #
+    nir_csv: str = os.path.join(PANEL_DETECT_CSV_OUTPUT, f'cam{i}_nir.csv')
+    rgb_csv: str = os.path.join(PANEL_DETECT_CSV_OUTPUT, f'cam{i}_rgb.csv')
+    split_csv(combined_csv, nir_csv, rgb_csv)
 
 print("Processing complete.")
