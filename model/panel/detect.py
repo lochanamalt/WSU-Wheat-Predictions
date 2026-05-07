@@ -1,14 +1,15 @@
-import cv2
-from pathlib import Path
-from ultralytics import YOLO
 import csv
-from typing import List, Tuple
 import os
+from pathlib import Path
+from typing import List, Tuple
 
-from paths import RAW_IMG_DIR
+import cv2
+from ultralytics import YOLO
 
-# Load the YOLOv8 model
-model: YOLO = YOLO('model/panel/best.pt')
+from paths import RAW_IMG_DIR, PANEL_DETECT_IMG_OUTPUT, YEAR, PANEL_DETECT_CSV_OUTPUT
+
+# Load the YOLOv12s model
+model: YOLO = YOLO('yolo12s_custom_panel_detection_combined.pt')
 
 
 def process_images(input_folder: str, output_folder: str, centers_list: List[Tuple[str, int, int, int, int]]) -> None:
@@ -40,8 +41,8 @@ def process_images(input_folder: str, output_folder: str, centers_list: List[Tup
             cv2.rectangle(img, (x1_new, y1_new), (x2_new, y2_new), (0, 0, 255), 2)
             centers_list.append((img_path.name, center_x, center_y, 10, 10))
 
-        cv2.imwrite(str(output_path / img_path.name), img)
-        print(f"Processed {img_path.name} with center at ({center_x}, {center_y})")
+        # cv2.imwrite(str(output_path / img_path.name), img)
+        print(f"Processed {img_path.name})")
 
 def save_to_csv(centers_list: List[Tuple[str, int, int, int, int]], output_csv: str) -> None:
     """Save the center coordinates to a CSV file.
@@ -90,19 +91,22 @@ def split_csv(input_csv: str, nir_csv: str, rgb_csv: str) -> None:
         writer.writerows(rgb_centers)
     print(f"Saved RGB center coordinates to {rgb_csv}")
 
-for i in range(1, 9):
-    project_root = os.path.dirname(os.path.abspath(__file__))
+pi_prefix = "cam"
+if YEAR == 2025:
+    pi_prefix = "pi"
+
+for i in range(1, 18):
 
     centers_list: List[Tuple[str, int, int, int, int]] = []  # Reset centers_list for each new camera folder
-    process_images(os.path.join(RAW_IMG_DIR, f'cam{i}'),
-                   os.path.join(project_root, f'../../data/2024_outputs/panel_detection_output/cam{i}'), centers_list)
+    process_images(os.path.join(RAW_IMG_DIR, f'{pi_prefix}{i}'),
+                   os.path.join(PANEL_DETECT_IMG_OUTPUT, f'cam{i}'), centers_list)
 
-    combined_csv: str = os.path.join(project_root, f'../../data/2024_outputs/panel_detection_output/csv_outputs/cam{i}.csv')
-
+    combined_csv: str = os.path.join(PANEL_DETECT_CSV_OUTPUT, f'cam{i}.csv')
+    #
     save_to_csv(centers_list, combined_csv)
-
-    nir_csv: str = os.path.join(project_root, f'../../data/2024_outputs/panel_detection_output/csv_outputs/cam{i}_nir.csv')
-    rgb_csv: str = os.path.join(project_root, f'../../data/2024_outputs/panel_detection_output/csv_outputs/cam{i}_rgb.csv')
+    #
+    nir_csv: str = os.path.join(PANEL_DETECT_CSV_OUTPUT, f'cam{i}_nir.csv')
+    rgb_csv: str = os.path.join(PANEL_DETECT_CSV_OUTPUT, f'cam{i}_rgb.csv')
     split_csv(combined_csv, nir_csv, rgb_csv)
 
 print("Processing complete.")
