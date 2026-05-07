@@ -1,2 +1,2 @@
-from .split_cam_images import process_rgb_images, process_nir_images
+from .split_cam_images import split_images
 from .radiometric_correction import apply_correction_to_all_images
