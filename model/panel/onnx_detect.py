@@ -208,14 +208,14 @@ if YEAR == 2025:
 
 for i in range(1, 2):
 
-    centers_list: List[Tuple[str, int, int, int, int]] = []  # Reset centers_list for each new camera folder
+    centers_list: List[Tuple[str, int, int, int, int]] = []
     process_images(os.path.join(RAW_IMG_DIR, f'{pi_prefix}{i}'),
                    os.path.join(PANEL_DETECT_IMG_OUTPUT, f'cam{i}'), centers_list)
 
     combined_csv: str = os.path.join(PANEL_DETECT_CSV_OUTPUT, f'cam{i}.csv')
-    #
+
     save_to_csv(centers_list, combined_csv)
-    #
+
     nir_csv: str = os.path.join(PANEL_DETECT_CSV_OUTPUT, f'cam{i}_nir.csv')
     rgb_csv: str = os.path.join(PANEL_DETECT_CSV_OUTPUT, f'cam{i}_rgb.csv')
     split_csv(combined_csv, nir_csv, rgb_csv)
