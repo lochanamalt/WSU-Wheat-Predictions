@@ -51,6 +51,8 @@ calibration_data_rgb_new: Dict[str, Dict[str, float]] = {
     'cam8': {'Blue': 11.85, 'Green': 13.97, 'Red': 14.05}
 }
 
+# TODO calculate calibration data for 2025 data
+
 def radiometric_correction(img: np.ndarray,
                            lut_values: Dict[str, float],
                            ref_panel_bgr: Sequence[float]) -> tuple[ndarray | Any, ndarray | Any]:
@@ -161,12 +163,12 @@ def image_correction_per_camera_csv_file(cam_csv, cam_input_dir, cam_output_dir_
             img_corrected_DN, img_corrected_RF = radiometric_correction(image, lut_values, mean_bgr)
 
             # Save the corrected image
-            output_path_dn = os.path.join(cam_output_dir_dn, filename + '.tif')
+            # output_path_dn = os.path.join(cam_output_dir_dn, filename + '.tif')
             output_path_rf = os.path.join(cam_output_dir_rf, filename + '.tif')
-            cv2.imwrite(output_path_dn, img_corrected_DN)
+            # cv2.imwrite(output_path_dn, img_corrected_DN)
             cv2.imwrite(output_path_rf, img_corrected_RF)
 
-            print(f"Saved corrected image with digital numbers: {output_path_dn}")
+            # print(f"Saved corrected image with digital numbers: {output_path_dn}")
             print(f"Saved corrected image with reflectance values: {output_path_rf}")
     save_to_csv(panel_reflectances, panel_reflectance_csv)
 
