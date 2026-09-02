@@ -78,7 +78,6 @@ def split_images(input_folder: str, output_folder: str) -> None:
                     os.remove(image_path)
                     continue
 
-                # Save the left half
                 cv2.imwrite(os.path.join(output_cam_ir_path, f'{filename}'), noir_half)
                 cv2.imwrite(os.path.join(output_cam_rgb_path, f'{filename}'), rgb_half)
 
@@ -88,6 +87,4 @@ if __name__ == "__main__":
 
     data_folder = RAW_IMG_DIR
     input_folder, output_folder = data_folder, data_folder
-
-    # Run the desired function
     split_images(input_folder, output_folder)
