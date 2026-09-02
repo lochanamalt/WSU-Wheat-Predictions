@@ -9,6 +9,7 @@ from paths import RAW_IMG_DIR, YEAR
 def split_images(input_folder: str, output_folder: str) -> None:
     """
     Processes NIR images from camera folders, extracting and saving the left half of each image.
+    The saturated images are also filtered.
 
     Args:
         input_folder (str): The path to the folder containing camera subfolders with NIR images.
