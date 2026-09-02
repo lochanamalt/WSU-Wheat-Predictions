@@ -17,10 +17,7 @@ def rename_files(folder_path: str) -> None:
     
     # Sort files to ensure consistent numbering
     files.sort()
-    
-    # Initialize counter
-    i = 1  # Change this to the next number in the sequence
-    
+
     # Iterate through the files and rename them
     for filename in files:
         # Check if the filename starts with 'date_'
@@ -34,9 +31,6 @@ def rename_files(folder_path: str) -> None:
             
             # Rename the file
             os.rename(old_file, new_file)
-            
-            # Increment the counter
-            i += 1
 
 if __name__ == "__main__":
     folder_path = 'path/to/folder'  # Change this to the path of the folder containing the files

@@ -1,96 +1,93 @@
 import os
-from PIL import Image
+from datetime import datetime
 
-from paths import RAW_IMG_DIR
+import cv2
+
+from paths import RAW_IMG_DIR, YEAR
 
 
-def process_rgb_images(input_folder: str, output_folder_rgb: str) -> None:
-    """
-    Processes RGB images from camera folders, extracting and saving the right half of each image.
-
-    Args:
-        input_folder (str): The path to the folder containing camera subfolders with RGB images.
-        output_folder_rgb (str): The path to the folder where the right halves of the RGB images will be saved.
-
-    Returns:
-        None
-    """
-    # List all camera folders
-    cam_folders = [f'cam{i}' for i in range(1, 9)]
-
-    for cam in cam_folders:
-        cam_path = os.path.join(input_folder, cam)
-        output_cam_rgb_path = os.path.join(output_folder_rgb, f'{cam}_rgb')
-
-        os.makedirs(output_cam_rgb_path, exist_ok=True)
-        # List all image files in the current camera folder
-        for filename in os.listdir(cam_path):
-            if filename.endswith('.png'):
-                image_path = os.path.join(cam_path, filename)
-                
-                # Open the image
-                img = Image.open(image_path)
-                
-                # Check the image size to ensure it is 1280 x 928
-                if img.size != (1280, 928):
-                    print(f"Skipping {image_path}: unexpected image size {img.size}")
-                    continue
-                
-                # Split the image to get the right half
-                right_half = img.crop((640, 0, 1280, 928))
-                
-                # Save the right half
-                right_half.save(os.path.join(output_cam_rgb_path, f'{os.path.splitext(filename)[0]}{os.path.splitext(filename)[1]}'))
-                
-                print(f"Processed right side of {filename}")
-
-def process_nir_images(input_folder: str, output_folder_ir: str) -> None:
+def split_images(input_folder: str, output_folder: str) -> None:
     """
     Processes NIR images from camera folders, extracting and saving the left half of each image.
+    The saturated images are also filtered.
 
     Args:
         input_folder (str): The path to the folder containing camera subfolders with NIR images.
-        output_folder_ir (str): The path to the folder where the left halves of the NIR images will be saved.
+        output_folder (str): The path to the folder where the left halves of the NIR images will be saved.
 
     Returns:
         None
     """
+
+    pi_prefix = "cam"
+    number_of_cams = 8
+    if YEAR == 2025:
+        pi_prefix = "pi"
+        number_of_cams = 17
+
+    cutoff = datetime(YEAR, 7, 13)
+
     # List all camera folders
-    cam_folders = [f'cam{i}' for i in range(1, 9)]
+    cam_folders = [f'{pi_prefix}{i}' for i in range(1, number_of_cams+1)]
 
     for cam in cam_folders:
         cam_path = os.path.join(input_folder, cam)
-        output_cam_ir_path = os.path.join(output_folder_ir, f'{cam}_nir')
-        
+        output_cam_ir_path = os.path.join(output_folder, f'{cam}_nir')
+        output_cam_rgb_path = os.path.join(output_folder, f'{cam}_rgb')
+
         os.makedirs(output_cam_ir_path, exist_ok=True)
-        
+        os.makedirs(output_cam_rgb_path, exist_ok=True)
+
         # List all image files in the current camera folder
         for filename in os.listdir(cam_path):
             if filename.endswith('.png'):
                 image_path = os.path.join(cam_path, filename)
-                
-                # Open the image
-                img = Image.open(image_path)
-                
-                # Check the image size to ensure it is 1280 x 928
-                if img.size != (1280, 928):
-                    print(f"Skipping {image_path}: unexpected image size {img.size}")
+
+                date_part = filename.split("_")[1]  # "2-7-2025"
+                day, month, year = map(int, date_part.split("-"))
+                file_date = datetime(year, month, day)
+
+
+                if file_date > cutoff:
+                    print(f"After July 20: {filename}")
+                    os.remove(image_path)
                     continue
-                
-                # Split the image to get the left half
-                left_half = img.crop((0, 0, 640, 928))
-                
+
+                img = cv2.imread(image_path)  # BGR format
+
+                img_width = img.shape[1]
+                half_img_width = img_width // 2
+
+                if cam == "pi10":
+                    # Left half (RGB)
+                    rgb_half = img[:, :half_img_width]
+                    # Right half (NoIR)
+                    noir_half = img[:, half_img_width:]
+                else:
+                    # Left half (NoIR)
+                    noir_half = img[:, :half_img_width]
+                    # Right half (RGB)
+                    rgb_half = img[:, half_img_width:]
+
+                noir_mean = noir_half.mean(axis=(0, 1))
+                rgb_mean = rgb_half.mean(axis=(0, 1))
+
+                if ((noir_mean > 239.9).all() or (noir_mean > 252).sum() >=2 or (rgb_mean > 239.9).all()
+                        or (rgb_mean > 252).sum() >=2) :
+                    print(f"============== Saturated: {filename} =================================")
+                    os.remove(image_path)
+                    continue
+
                 # Save the left half
-                left_half.save(os.path.join(output_cam_ir_path, f'{os.path.splitext(filename)[0]}{os.path.splitext(filename)[1]}'))
-                
-                print(f"Processed left side of {filename}")
+                cv2.imwrite(os.path.join(output_cam_ir_path, f'{filename}'), noir_half)
+                cv2.imwrite(os.path.join(output_cam_rgb_path, f'{filename}'), rgb_half)
+
+                print(f"Processed {filename}")
 
 if __name__ == "__main__":
-    project_root = os.path.dirname(os.path.abspath(__file__))
-    data_folder = RAW_IMG_DIR
 
-    input_folder, output_folder_rgb, output_folder_ir = data_folder, data_folder, data_folder
+    data_folder = RAW_IMG_DIR
+    input_folder, output_folder = data_folder, data_folder
 
     # Run the desired function
-    process_rgb_images(input_folder, output_folder_rgb)
-    process_nir_images(input_folder, output_folder_ir)
+    split_images(input_folder, output_folder)
