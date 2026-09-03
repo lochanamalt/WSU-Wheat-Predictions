@@ -54,7 +54,7 @@ def orb_ransac_alignment(source_img_grey, output_img_grey, img_to_align):
     source_img = edge_representations(source_img_grey)
     output_img = edge_representations(output_img_grey)
 
-    #Detect key-points and descriptors
+    # Detect key-points and descriptors
     orb = cv2.ORB_create(nfeatures=5000, scaleFactor=1.2, nlevels=8, fastThreshold=5)
     k1 = orb.detectAndCompute((source_img * 255).astype(np.uint8), None)
     k2 = orb.detectAndCompute((output_img * 255).astype(np.uint8), None)
@@ -226,7 +226,7 @@ if __name__ == "__main__":
     # Max of max errors: 9387.932117410168
     # Min of min errors: 0.7471738573418135
 
-    # Try the failed images with ECC method
+    # Try the failed images with ECC method (A better transition is implemented in the Azure deployed version.)
 
     alignment_method = AlignMethod.ECC
     ecc_failed_images = []
